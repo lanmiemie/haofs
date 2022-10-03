@@ -29,10 +29,11 @@ class Account:
         })
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(level=logging.INFO if log else logging.WARNING)
-        console = logging.StreamHandler()
-        console.setFormatter(
-            logging.Formatter('%(asctime)s - - %(levelname)s - %(message)s'))
-        self.logger.addHandler(console)
+        if not self.logger.handlers:
+            console = logging.StreamHandler()
+            console.setFormatter(
+                logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+            self.logger.addHandler(console)
 
     def login(self, email, password):
         '''
