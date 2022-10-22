@@ -23,6 +23,12 @@ from hfs import Account
 # 创建账号对象
 student = Account()
 # student = Account(log=True)  # 启用日志
+# student = Account(proxies='http://183.7.136.163:40003/')  # 配置代理
+# student = Account(
+#     proxies={
+#         'http': 'http://183.7.136.163:40003/',
+#         'https': 'http://183.7.136.163:40003/',
+#     })  # 配置代理
 
 # 初始化
 # 方式1：直接输入好分数学生账号邮箱和密码

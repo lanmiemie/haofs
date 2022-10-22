@@ -17,8 +17,11 @@ class Account:
     session: Session = None  # requests会话
     student_data: dict = None  # 当前学生信息
     exams_data: list = None  # 考试列表
+    proxies = {}  # 代理
 
-    def __init__(self, log: bool = False):
+    def __init__(self,
+                 log: bool = False,
+                 proxies: str | Dict[str, str] = None):
         # 初始化session
         self.session = Session()
         self.session.headers.update({
@@ -27,6 +30,14 @@ class Account:
             'Origin': 'https://www.haofenshu.com',
             'Referer': 'https://www.haofenshu.com/',
         })
+
+        # 配置代理
+        if type(proxies) == str:
+            self.session.proxies = {'http': proxies, 'https': proxies}
+        elif type(proxies) == dict:
+            self.session.proxies = proxies
+
+        # 配置日志
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(level=logging.INFO if log else logging.WARNING)
         if not self.logger.handlers:
