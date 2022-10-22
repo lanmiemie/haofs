@@ -15,27 +15,26 @@ class Account:
     email: str = None  # 当前好分数账号邮箱地址
     password: str = None  # 当前好分数账号密码
     session: Session = None  # requests会话
-    student_data: dict = None  # 当前学生信息
-    exams_data: list = None  # 考试列表
-    proxies = {}  # 代理
+    __student_data: dict = None  # 当前学生信息
+    __exams_data: list = None  # 考试列表
 
     def __init__(self,
                  log: bool = False,
                  proxies: str | Dict[str, str] = None):
         # 初始化session
         self.session = Session()
-        self.session.headers.update({
-            'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.0.0 Safari/537.36',
-            'Origin': 'https://www.haofenshu.com',
-            'Referer': 'https://www.haofenshu.com/',
-        })
 
         # 配置代理
         if type(proxies) == str:
             self.session.proxies = {'http': proxies, 'https': proxies}
         elif type(proxies) == dict:
             self.session.proxies = proxies
+        self.session.headers.update({
+            'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.0.0 Safari/537.36',
+            'Origin': 'https://www.haofenshu.com',
+            'Referer': 'https://www.haofenshu.com/',
+        })
 
         # 配置日志
         self.logger = logging.getLogger(__name__)
@@ -177,19 +176,19 @@ class Account:
             @return className: 班级（导师姓名）
         '''
         assert self.logged_in, '获取学生信息前请先登录账号！'
-        if self.student_data is None:
+        if self.__student_data is None:
             self.logger.info(f'未找到缓存，正在联网获取{{{self.email}}}账号的student信息...')
             r = self.session.get(
                 'https://hfs-be.yunxiao.com/v2/user-center/user-snapshot'
             ).json()
             data = r['data']['linkedStudent']
-            self.student_data = {
+            self.__student_data = {
                 i: data[i]
                 for i in ('studentId', 'studentName', 'schoolName', 'grade',
                           'className')
             }
-            self.student_data['xuehao'] = data['xuehao'][0]
-        return self.student_data
+            self.__student_data['xuehao'] = data['xuehao'][0]
+        return self.__student_data
 
     @property
     def exams(self):
@@ -197,12 +196,12 @@ class Account:
             获取当前学生的考试列表。首次取值时会自动获取并缓存。
         '''
         assert self.logged_in, '获取考试列表前请先登录账号！'
-        if self.exams_data is None:
+        if self.__exams_data is None:
             self.logger.info(f'未找到缓存，正在联网获取{{{self}}}的exams信息...')
             r = self.session.get(
                 'https://hfs-be.yunxiao.com/v3/exam/list?start=-1').json()
-            self.exams_data = r['data']['list']
-        return self.exams_data
+            self.__exams_data = r['data']['list']
+        return self.__exams_data
 
     def get_exam(self, latest=0):
         '''
@@ -243,7 +242,7 @@ class Exam(IncludeAccount):
     examId: int = None  # 考试ID
     full_data: dict = None  # 考试详细数据
     papers: Dict[str, Paper]
-    papers_data: Dict[str, Paper] = None  # 考试试卷数据字典，key为试卷名称，value为试卷对象
+    __papers_data: Dict[str, Paper] = None  # 考试试卷数据字典，key为试卷名称，value为试卷对象
 
     def __init__(self, account: Account, examId: int):
         '''
@@ -285,12 +284,12 @@ class Exam(IncludeAccount):
             获取考试的试卷信息。首次取值时会自动获取并缓存。
             返回值为一个字典，key为试卷名称，value为试卷对象。
         '''
-        if self.papers_data is None:
+        if self.__papers_data is None:
             self.logger.info(f'未找到缓存，正在联网获取{{{self}}}的papers信息...')
-            self.papers_data = {}
+            self.__papers_data = {}
             for i in self.full_data['papers']:
-                self.papers_data[i['name']] = Paper(self, i)
-        return self.papers_data
+                self.__papers_data[i['name']] = Paper(self, i)
+        return self.__papers_data
 
     def __str__(self):
         '''
@@ -303,8 +302,8 @@ class Paper(IncludeAccount):
     exam: Exam = None  # 试卷所属考试
     paperData: dict = None  # 试卷详细数据
     paperId: int = None  # 试卷ID
-    questions_data: list = None  # 试卷题目数据列表
-    pictures_data: list = None  # 答题卡图片URL列表
+    __questions_data: list = None  # 试卷题目数据列表
+    __pictures_data: list = None  # 答题卡图片URL列表
 
     @property
     def paperId(self):
@@ -321,12 +320,12 @@ class Paper(IncludeAccount):
             获取试卷的题目列表。首次取值时会自动获取并缓存。
             该接口返回好分数原生数据，未进行优化，实用性不高。
         '''
-        if self.questions_data is None:
+        if self.__questions_data is None:
             r = self.session.get(
                 f'https://hfs-be.yunxiao.com/v3/exam/{self.exam.examId}/papers/{self.paperId}/question-detail'
             ).json()
-            self.questions_data = r['data']['questionList']
-        return self.questions_data
+            self.__questions_data = r['data']['questionList']
+        return self.__questions_data
 
     @property
     def pictures(self):
@@ -334,13 +333,13 @@ class Paper(IncludeAccount):
             获取答题卡的图片列表。首次取值时会自动获取并缓存。
             返回值：一个列表，每个元素为字符串，表示图片URL。
         '''
-        if self.pictures_data is None:
+        if self.__pictures_data is None:
             self.logger.info(f'未找到缓存，正在联网获取{{{self}}}的pictures信息...')
             r = self.session.get(
                 f'https://hfs-be.yunxiao.com/v3/exam/{self.exam.examId}/papers/{self.paperId}/answer-picture'
             ).json()
-            self.pictures_data = r['data']['url']
-        return self.pictures_data
+            self.__pictures_data = r['data']['url']
+        return self.__pictures_data
 
     def save_pictures(self, path: str):
         '''
