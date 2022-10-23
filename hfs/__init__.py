@@ -1,1 +1,1 @@
-from hfs.models import Account, Exam, Paper
+from .models import Account, Exam, Paper

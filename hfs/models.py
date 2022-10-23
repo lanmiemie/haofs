@@ -7,7 +7,7 @@ from urllib.parse import unquote
 from mail_gw import Account as TempMail
 from requests import Session
 
-from hfs.utils import generate_random_string
+from .utils import generate_random_string
 
 
 class Account:
@@ -305,14 +305,11 @@ class Paper(IncludeAccount):
     __questions_data: list = None  # 试卷题目数据列表
     __pictures_data: list = None  # 答题卡图片URL列表
 
-    @property
-    def paperId(self):
-        return self.paperData['paperId']
-
     def __init__(self, exam: Exam, paperData: dict):
         self.exam = exam
         self.account = exam.account
         self.paperData = paperData
+        self.paperId = paperData['paperId']
 
     @property
     def questions(self):
