@@ -1,0 +1,5 @@
+__pycache__/
+/haofs.egg-info/
+/dist/
+
+*.local.*
